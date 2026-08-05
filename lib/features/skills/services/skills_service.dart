@@ -1,0 +1,181 @@
+import '../../../core/models/portfolio_models.dart';
+
+/// Skills data service.
+class SkillsService {
+  List<SkillModel> getAllSkills() => const [
+        // Frontend
+        SkillModel(
+          name: 'Flutter',
+          category: 'Frontend',
+          experience: '4.5+ Years',
+          description: 'Cross-platform UI development with custom widgets and animations',
+          progress: 0.95,
+          icon: '🎯',
+          color: 0xFF6366F1,
+        ),
+        SkillModel(
+          name: 'Dart',
+          category: 'Frontend',
+          experience: '4.5+ Years',
+          description: 'Advanced Dart programming, async patterns, and isolates',
+          progress: 0.92,
+          icon: '💙',
+          color: 0xFF0175C2,
+        ),
+        SkillModel(
+          name: 'Responsive UI',
+          category: 'Frontend',
+          experience: '4+ Years',
+          description: 'Adaptive layouts for mobile, tablet, desktop, and web',
+          progress: 0.90,
+          icon: '📱',
+          color: 0xFF8B5CF6,
+        ),
+        SkillModel(
+          name: 'Animations',
+          category: 'Frontend',
+          experience: '3+ Years',
+          description: 'Hero animations, Lottie, custom painters, and micro-interactions',
+          progress: 0.88,
+          icon: '✨',
+          color: 0xFFEC4899,
+        ),
+        // Backend
+        SkillModel(
+          name: 'REST APIs',
+          category: 'Backend',
+          experience: '4+ Years',
+          description: 'API integration, error handling, caching, and pagination',
+          progress: 0.90,
+          icon: '🔗',
+          color: 0xFF06B6D4,
+        ),
+        SkillModel(
+          name: 'Socket.IO',
+          category: 'Backend',
+          experience: '3+ Years',
+          description: 'Real-time chat, live tracking, and push-based updates',
+          progress: 0.85,
+          icon: '⚡',
+          color: 0xFF22C55E,
+        ),
+        // Architecture
+        SkillModel(
+          name: 'Clean Architecture',
+          category: 'Architecture',
+          experience: '3+ Years',
+          description: 'SOLID principles, separation of concerns, and testable code',
+          progress: 0.92,
+          icon: '🏗️',
+          color: 0xFFF59E0B,
+        ),
+        SkillModel(
+          name: 'MVVM + GetX',
+          category: 'Architecture',
+          experience: '4+ Years',
+          description: 'Reactive state management with bindings and dependency injection',
+          progress: 0.93,
+          icon: '🔄',
+          color: 0xFF6366F1,
+        ),
+        SkillModel(
+          name: 'BLoC & Provider',
+          category: 'Architecture',
+          experience: '3+ Years',
+          description: 'State management and business logic components',
+          progress: 0.85,
+          icon: '🧩',
+          color: 0xFF06B6D4,
+        ),
+        // Firebase
+        SkillModel(
+          name: 'Firebase Auth',
+          category: 'Firebase',
+          experience: '4+ Years',
+          description: 'Email, phone, social login, and custom claims',
+          progress: 0.90,
+          icon: '🔐',
+          color: 0xFFFFCA28,
+        ),
+        SkillModel(
+          name: 'Cloud Firestore',
+          category: 'Firebase',
+          experience: '3+ Years',
+          description: 'NoSQL database design, security rules, and offline sync',
+          progress: 0.88,
+          icon: '🔥',
+          color: 0xFFFF5722,
+        ),
+        SkillModel(
+          name: 'Push Notifications',
+          category: 'Firebase',
+          experience: '3+ Years',
+          description: 'FCM integration with local and remote notifications',
+          progress: 0.87,
+          icon: '🔔',
+          color: 0xFF4CAF50,
+        ),
+        // Payment
+        SkillModel(
+          name: 'Stripe',
+          category: 'Payment',
+          experience: '2+ Years',
+          description: 'Payment intents, subscriptions, and webhook handling',
+          progress: 0.82,
+          icon: '💳',
+          color: 0xFF635BFF,
+        ),
+        SkillModel(
+          name: 'Razorpay',
+          category: 'Payment',
+          experience: '3+ Years',
+          description: 'Indian payment gateway integration with UPI and wallets',
+          progress: 0.88,
+          icon: '💰',
+          color: 0xFF3395FF,
+        ),
+        // Maps
+        SkillModel(
+          name: 'Google Maps',
+          category: 'Maps',
+          experience: '3+ Years',
+          description: 'Custom markers, polylines, geofencing, and live tracking',
+          progress: 0.90,
+          icon: '🗺️',
+          color: 0xFF34A853,
+        ),
+        // CI/CD
+        SkillModel(
+          name: 'CI/CD',
+          category: 'CI/CD',
+          experience: '2+ Years',
+          description: 'Codemagic, GitHub Actions, and automated deployments',
+          progress: 0.80,
+          icon: '🚀',
+          color: 0xFF06B6D4,
+        ),
+        // Version Control
+        SkillModel(
+          name: 'Git & GitHub',
+          category: 'Version Control',
+          experience: '4+ Years',
+          description: 'Branching strategies, PR reviews, and collaborative workflows',
+          progress: 0.92,
+          icon: '📦',
+          color: 0xFFF05032,
+        ),
+      ];
+
+  List<String> getCategories() => const [
+        'All',
+        'Frontend',
+        'Backend',
+        'Architecture',
+        'Firebase',
+        'Payment',
+        'Maps',
+        'Animations',
+        'CI/CD',
+        'Version Control',
+      ];
+}
