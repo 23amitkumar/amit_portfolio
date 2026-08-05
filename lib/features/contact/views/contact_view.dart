@@ -57,6 +57,7 @@ class _ContactForm extends GetView<ContactController> {
     return GlassCard(
       child: Form(
         key: controller.formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
