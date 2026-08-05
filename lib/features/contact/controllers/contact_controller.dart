@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/clipboard_helper.dart';
@@ -52,24 +54,51 @@ class ContactController extends GetxController {
     if (!formKey.currentState!.validate()) return;
 
     isSending.value = true;
-    await Future.delayed(const Duration(seconds: 2));
-    isSending.value = false;
-    isSent.value = true;
+    
+    try {
+      final response = await http.post(
+        Uri.parse('https://formspree.io/f/mrpzglob'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': nameController.text.trim(),
+          'email': emailController.text.trim(),
+          'subject': subjectController.text.trim(),
+          'message': messageController.text.trim(),
+        }),
+      );
 
-    Get.snackbar(
-      'Message Sent!',
-      'Thank you for reaching out. I will get back to you within 24 hours.',
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      backgroundColor: const Color(0xFF22C55E),
-      colorText: Colors.white,
-    );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        isSent.value = true;
+        Get.snackbar(
+          'Message Sent!',
+          'Thank you for reaching out. I will get back to you within 24 hours.',
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          backgroundColor: const Color(0xFF22C55E),
+          colorText: Colors.white,
+        );
 
-    nameController.clear();
-    emailController.clear();
-    subjectController.clear();
-    messageController.clear();
+        nameController.clear();
+        emailController.clear();
+        subjectController.clear();
+        messageController.clear();
+      } else {
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Could not send message. Please try again later or email me directly.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    } finally {
+      isSending.value = false;
+    }
   }
 
   Future<void> openWhatsApp() async {
