@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:dio/dio.dart';
+
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/clipboard_helper.dart';
@@ -56,15 +56,15 @@ class ContactController extends GetxController {
     isSending.value = true;
     
     try {
-      final response = await http.post(
-        Uri.parse('https://formspree.io/f/mrpzglob'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final dio = Dio();
+      final response = await dio.post(
+        'https://formspree.io/f/mrpzglob',
+        data: {
           'name': nameController.text.trim(),
           'email': emailController.text.trim(),
           'subject': subjectController.text.trim(),
           'message': messageController.text.trim(),
-        }),
+        },
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
