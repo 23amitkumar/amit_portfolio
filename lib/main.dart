@@ -15,12 +15,12 @@ void main() {
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
 
-  runApp(const PortfolioApp());
+  runApp(const MyApp());
 }
 
 /// Root application widget with GetX configuration.
-class PortfolioApp extends StatelessWidget {
-  const PortfolioApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
