@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/models/portfolio_models.dart';
 import '../../../core/theme/app_colors.dart';
@@ -68,7 +69,14 @@ class _ExperienceCardState extends State<_ExperienceCard> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.business_rounded, color: Colors.white),
-                ),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.08, 1.08),
+                      duration: 1800.ms,
+                      curve: Curves.easeInOut,
+                    ),
                 16.horizontalSpace,
                 Expanded(
                   child: Column(
@@ -79,17 +87,12 @@ class _ExperienceCardState extends State<_ExperienceCard> {
                         widget.experience.company,
                         style: context.textTheme.titleMedium?.copyWith(color: AppColors.primary),
                       ),
+                      4.verticalSpace,
+                      Text(widget.experience.duration, style: context.textTheme.labelMedium),
+                      Text(widget.experience.location, style: context.textTheme.bodySmall),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(widget.experience.duration, style: context.textTheme.labelMedium),
-                    Text(widget.experience.location, style: context.textTheme.bodySmall),
-                  ],
-                ),
-                8.horizontalSpace,
                 AnimatedRotation(
                   turns: _expanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 300),

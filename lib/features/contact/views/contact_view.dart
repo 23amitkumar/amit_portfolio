@@ -32,17 +32,20 @@ class ContactView extends GetView<ContactController> {
           isMobile
               ? Column(
                   children: [
-                    _ContactForm(),
+                    StaggerItem(index: 0, child: _ContactForm()),
                     32.verticalSpace,
-                    _ContactInfo(),
+                    StaggerItem(index: 1, child: _ContactInfo()),
                   ],
                 )
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 2, child: _ContactForm()),
+                    Expanded(
+                      flex: 2,
+                      child: StaggerItem(index: 0, child: _ContactForm()),
+                    ),
                     32.horizontalSpace,
-                    Expanded(child: _ContactInfo()),
+                    Expanded(child: StaggerItem(index: 1, child: _ContactInfo())),
                   ],
                 ),
         ],

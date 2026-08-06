@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/models/portfolio_models.dart';
 import '../../../core/theme/app_colors.dart';
@@ -28,11 +29,17 @@ class AboutView extends GetView<AboutController> {
           ),
           _IntroSection(),
           64.verticalSpace,
-          Text('My Journey', style: context.textTheme.headlineMedium),
+          Text('My Journey', style: context.textTheme.headlineMedium)
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 500.ms)
+              .slideX(begin: -0.1, end: 0),
           32.verticalSpace,
           _TimelineSection(items: controller.journey.cast<TimelineModel>()),
           64.verticalSpace,
-          Text('Education', style: context.textTheme.headlineMedium),
+          Text('Education', style: context.textTheme.headlineMedium)
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 500.ms)
+              .slideX(begin: -0.1, end: 0),
           32.verticalSpace,
           _TimelineSection(items: controller.education.cast<TimelineModel>()),
         ],
@@ -65,7 +72,10 @@ class _IntroSection extends GetView<AboutController> {
                 ),
               ],
             ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .slideY(begin: 0.12, end: 0, duration: 600.ms, curve: Curves.easeOutCubic);
   }
 }
 
@@ -112,7 +122,14 @@ class _TimelineTile extends StatelessWidget {
                   color: item.isHighlighted ? null : AppColors.primary.withValues(alpha: 0.3),
                   border: Border.all(color: AppColors.primary, width: 2),
                 ),
-              ),
+              )
+                  .animate(onPlay: item.isHighlighted ? (c) => c.repeat(reverse: true) : null)
+                  .scale(
+                    begin: const Offset(1, 1),
+                    end: const Offset(1.25, 1.25),
+                    duration: 1200.ms,
+                    curve: Curves.easeInOut,
+                  ),
               if (!isLast)
                 Expanded(
                   child: Container(
@@ -132,28 +149,23 @@ class _TimelineTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(item.title, style: context.textTheme.titleLarge),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item.period,
-                            style: context.textTheme.labelMedium?.copyWith(color: AppColors.primary),
-                          ),
-                        ),
-                      ],
-                    ),
+                    Text(item.title, style: context.textTheme.titleLarge),
                     4.verticalSpace,
                     Text(
                       item.subtitle,
                       style: context.textTheme.titleMedium?.copyWith(color: AppColors.primary),
+                    ),
+                    8.verticalSpace,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        item.period,
+                        style: context.textTheme.labelMedium?.copyWith(color: AppColors.primary),
+                      ),
                     ),
                     12.verticalSpace,
                     Text(item.description, style: context.textTheme.bodyMedium),

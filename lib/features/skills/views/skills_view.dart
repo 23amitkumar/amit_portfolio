@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/models/portfolio_models.dart';
 import '../../../core/theme/app_colors.dart';
@@ -39,7 +40,10 @@ class SkillsView extends GetView<SkillsController> {
                 borderSide: BorderSide.none,
               ),
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .slideY(begin: 0.08, end: 0, duration: 400.ms),
           24.verticalSpace,
           Obx(
             () => FilterChips(
@@ -50,23 +54,40 @@ class SkillsView extends GetView<SkillsController> {
           ),
           32.verticalSpace,
           Obx(
-            () => GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: Responsive.isMobile(context) ? 1.1 : 0.95,
-              ),
-              itemCount: controller.filteredSkills.length,
-              itemBuilder: (context, index) {
-                return StaggerItem(
-                  index: index,
-                  child: _SkillCard(skill: controller.filteredSkills[index], index: index),
+            () {
+              final skills = controller.filteredSkills;
+              if (Responsive.isMobile(context)) {
+                return Column(
+                  children: skills.asMap().entries.map((entry) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: entry.key < skills.length - 1 ? 12 : 0),
+                      child: StaggerItem(
+                        index: entry.key,
+                        child: _SkillCard(skill: entry.value, index: entry.key),
+                      ),
+                    );
+                  }).toList(),
                 );
-              },
-            ),
+              }
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  mainAxisExtent: columns == 3 ? 240 : 220,
+                ),
+                itemCount: skills.length,
+                itemBuilder: (context, index) {
+                  return StaggerItem(
+                    index: index,
+                    child: _SkillCard(skill: skills[index], index: index, compact: true),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
@@ -75,26 +96,29 @@ class SkillsView extends GetView<SkillsController> {
 }
 
 class _SkillCard extends StatelessWidget {
-  const _SkillCard({required this.skill, required this.index});
+  const _SkillCard({required this.skill, required this.index, this.compact = false});
 
   final SkillModel skill;
   final int index;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final color = Color(skill.color);
 
     return GlassCard(
-      hoverEffect: true,
+      hoverEffect: !compact,
+      padding: compact ? const EdgeInsets.all(16) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Text(skill.icon, style: const TextStyle(fontSize: 32)),
+              Text(skill.icon, style: TextStyle(fontSize: compact ? 26 : 32)),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -106,21 +130,30 @@ class _SkillCard extends StatelessWidget {
               ),
             ],
           ),
-          16.verticalSpace,
-          Text(skill.name, style: context.textTheme.titleLarge),
+          SizedBox(height: compact ? 10 : 16),
+          Text(
+            skill.name,
+            style: compact ? context.textTheme.titleMedium : context.textTheme.titleLarge,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           4.verticalSpace,
-          Text(skill.category, style: context.textTheme.labelMedium?.copyWith(color: color)),
-          12.verticalSpace,
+          Text(
+            skill.category,
+            style: context.textTheme.labelMedium?.copyWith(color: color),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: compact ? 8 : 12),
           Text(
             skill.description,
             style: context.textTheme.bodySmall,
-            maxLines: 2,
+            maxLines: compact ? 2 : 3,
             overflow: TextOverflow.ellipsis,
           ),
-          const Spacer(),
-          12.verticalSpace,
+          SizedBox(height: compact ? 10 : 12),
           SkillProgressBar(progress: skill.progress, color: color, delay: index * 50),
-          6.verticalSpace,
+          4.verticalSpace,
           Text(
             '${(skill.progress * 100).round()}%',
             style: context.textTheme.labelSmall?.copyWith(color: color),

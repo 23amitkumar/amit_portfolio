@@ -204,19 +204,20 @@ class _StatsSection extends GetView<HomeController> {
             crossAxisCount: columns,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: Responsive.isMobile(context) ? 1.3 : 1.6,
+            mainAxisExtent: Responsive.isMobile(context)
+                ? 108
+                : columns == 4
+                    ? 130
+                    : 120,
           ),
           itemCount: stats.length,
           itemBuilder: (context, index) {
             final stat = stats[index];
-            return FittedBox(
-              fit: BoxFit.scaleDown,
-              child: AnimatedCounter(
-                value: stat.value,
-                suffix: stat.suffix,
-                label: stat.label,
-                delay: index * 100,
-              ),
+            return AnimatedCounter(
+              value: stat.value,
+              suffix: stat.suffix,
+              label: stat.label,
+              delay: index * 100,
             );
           },
         ),
@@ -229,7 +230,7 @@ class _WorkTogetherSection extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(48),
+      padding: EdgeInsets.all(Responsive.isMobile(context) ? 24 : 48),
       child: Column(
         children: [
           Text(

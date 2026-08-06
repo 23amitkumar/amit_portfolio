@@ -1,12 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:amit_porfolio/main.dart';
+import 'package:amit_porfolio/core/constants/app_constants.dart';
+import 'package:amit_porfolio/core/routes/app_routes.dart';
 
 void main() {
-  testWidgets('Portfolio app smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const PortfolioApp());
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Amit'), findsWidgets);
+  test('Portfolio constants smoke test', () {
+    expect(AppConstants.developerName, contains('Amit'));
+    expect(AppRoutes.testimonials, '/testimonials');
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -118,7 +120,7 @@ class _BlobPainter extends CustomPainter {
 }
 
 /// Glassmorphism container widget.
-class GlassCard extends StatelessWidget {
+class GlassCard extends StatefulWidget {
   const GlassCard({
     super.key,
     required this.child,
@@ -135,41 +137,56 @@ class GlassCard extends StatelessWidget {
   final bool hoverEffect;
 
   @override
+  State<GlassCard> createState() => _GlassCardState();
+}
+
+class _GlassCardState extends State<GlassCard> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = context.isDarkMode;
-    final isDesktop = Responsive.isWebOrDesktop(context);
+    final canHover = widget.hoverEffect && Responsive.supportsHover(context);
 
-    Widget card = Container(
-      padding: padding ?? const EdgeInsets.all(24),
+    Widget card = AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      transform: canHover && _hovered
+          ? Matrix4.translationValues(0.0, -6.0, 0.0)
+          : Matrix4.identity(),
+      padding: widget.padding ?? const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(widget.borderRadius),
         color: AppColors.glassBackground(isDark),
-        border: Border.all(color: AppColors.glassBorder(isDark)),
+        border: Border.all(
+          color: canHover && _hovered
+              ? AppColors.primary.withValues(alpha: 0.45)
+              : AppColors.glassBorder(isDark),
+        ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.3)
-                : AppColors.primary.withValues(alpha: 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+                ? Colors.black.withValues(alpha: canHover && _hovered ? 0.45 : 0.3)
+                : AppColors.primary.withValues(alpha: canHover && _hovered ? 0.14 : 0.06),
+            blurRadius: canHover && _hovered ? 32 : 24,
+            offset: Offset(0, canHover && _hovered ? 14 : 8),
           ),
         ],
       ),
-      child: child,
+      child: widget.child,
     );
 
-    if (hoverEffect && isDesktop) {
+    if (canHover) {
       card = MouseRegion(
-        cursor: onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          child: card,
-        ),
+        cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: card,
       );
     }
 
-    if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: card);
+    if (widget.onTap != null) {
+      return GestureDetector(onTap: widget.onTap, child: card);
     }
     return card;
   }
@@ -348,38 +365,73 @@ class AnimatedCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: value),
-            duration: Duration(milliseconds: 1500 + delay),
-            curve: Curves.easeOutCubic,
-            builder: (context, val, _) {
-              final display = value == value.roundToDouble()
-                  ? val.round().toString()
-                  : val.toStringAsFixed(1);
-              return Text(
-                '$display$suffix',
-                style: context.textTheme.displaySmall?.copyWith(
-                  foreground: Paint()
-                    ..shader = AppColors.primaryGradient.createShader(
-                      const Rect.fromLTWH(0, 0, 200, 70),
-                    ),
-                ),
-              );
-            },
+    final isMobile = Responsive.isMobile(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tight = constraints.maxHeight < 100;
+
+        return GlassCard(
+          padding: EdgeInsets.symmetric(
+            horizontal: tight ? 8 : (isMobile ? 10 : 16),
+            vertical: tight ? 8 : (isMobile ? 10 : 16),
           ),
-          8.verticalSpace,
-          Text(label, style: context.textTheme.titleMedium),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(delay: Duration(milliseconds: delay), duration: 600.ms)
-        .slideY(begin: 0.3, end: 0);
+          hoverEffect: false,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SizedBox(
+              width: constraints.maxWidth,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: value),
+                    duration: Duration(milliseconds: 1500 + delay),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, val, _) {
+                      final display = value == value.roundToDouble()
+                          ? val.round().toString()
+                          : val.toStringAsFixed(1);
+                      return Text(
+                        '$display$suffix',
+                        textAlign: TextAlign.center,
+                        style: (tight
+                                ? context.textTheme.titleLarge
+                                : isMobile
+                                    ? context.textTheme.headlineMedium
+                                    : context.textTheme.displaySmall)
+                            ?.copyWith(
+                          foreground: Paint()
+                            ..shader = AppColors.primaryGradient.createShader(
+                              const Rect.fromLTWH(0, 0, 200, 70),
+                            ),
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: tight ? 2 : 4),
+                  Text(
+                    label,
+                    style: tight
+                        ? context.textTheme.labelSmall
+                        : isMobile
+                            ? context.textTheme.bodySmall
+                            : context.textTheme.titleSmall,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
+            .animate()
+            .fadeIn(delay: Duration(milliseconds: delay), duration: 600.ms)
+            .slideY(begin: 0.3, end: 0);
+      },
+    );
   }
 }
 
@@ -398,18 +450,24 @@ class StaggerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final delay = Duration(milliseconds: index * baseDelay);
+
     return child
         .animate()
-        .fadeIn(
-          delay: Duration(milliseconds: index * baseDelay),
-          duration: 500.ms,
-        )
+        .fadeIn(delay: delay, duration: 500.ms)
         .slideY(
           begin: 0.15,
           end: 0,
-          delay: Duration(milliseconds: index * baseDelay),
+          delay: delay,
           duration: 500.ms,
           curve: Curves.easeOutCubic,
+        )
+        .scale(
+          begin: const Offset(0.92, 0.92),
+          end: const Offset(1, 1),
+          delay: delay,
+          duration: 500.ms,
+          curve: Curves.easeOutBack,
         );
   }
 }
@@ -505,66 +563,88 @@ class _TypingTextState extends State<TypingText> {
   int _charIndex = 0;
   bool _isDeleting = false;
   String _display = '';
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _tick();
+    _scheduleStep(Duration.zero);
   }
 
-  Future<void> _tick() async {
-    while (mounted) {
-      final current = widget.texts[_textIndex];
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
-      if (!_isDeleting) {
-        if (_charIndex < current.length) {
-          setState(() {
-            _charIndex++;
-            _display = current.substring(0, _charIndex);
-          });
-          await Future.delayed(widget.speed);
-        } else {
-          await Future.delayed(widget.pause);
-          _isDeleting = true;
-        }
-      } else {
-        if (_charIndex > 0) {
-          setState(() {
-            _charIndex--;
-            _display = current.substring(0, _charIndex);
-          });
-          await Future.delayed(widget.speed ~/ 2);
-        } else {
-          _isDeleting = false;
-          _textIndex = (_textIndex + 1) % widget.texts.length;
-        }
+  void _scheduleStep(Duration delay) {
+    _timer?.cancel();
+    _timer = Timer(delay, _step);
+  }
+
+  void _step() {
+    if (!mounted) return;
+
+    final current = widget.texts[_textIndex];
+
+    if (!_isDeleting) {
+      if (_charIndex < current.length) {
+        setState(() {
+          _charIndex++;
+          _display = current.substring(0, _charIndex);
+        });
+        _scheduleStep(widget.speed);
+        return;
       }
+      _isDeleting = true;
+      _scheduleStep(widget.pause);
+      return;
     }
+
+    if (_charIndex > 0) {
+      setState(() {
+        _charIndex--;
+        _display = current.substring(0, _charIndex);
+      });
+      _scheduleStep(widget.speed ~/ 2);
+      return;
+    }
+
+    _isDeleting = false;
+    _textIndex = (_textIndex + 1) % widget.texts.length;
+    _scheduleStep(Duration.zero);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          _display,
-          style: context.textTheme.headlineMedium?.copyWith(
-            foreground: Paint()
-              ..shader = AppColors.primaryGradient.createShader(
-                const Rect.fromLTWH(0, 0, 300, 50),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _display,
+              style: context.textTheme.headlineMedium?.copyWith(
+                foreground: Paint()
+                  ..shader = AppColors.primaryGradient.createShader(
+                    const Rect.fromLTWH(0, 0, 300, 50),
+                  ),
               ),
-          ),
+            ),
+            Container(
+              width: 3,
+              height: 28,
+              margin: const EdgeInsets.only(left: 4),
+              color: AppColors.primary,
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .fade(begin: 1, end: 0, duration: 500.ms),
+          ],
         ),
-        Container(
-          width: 3,
-          height: 28,
-          margin: const EdgeInsets.only(left: 4),
-          color: AppColors.primary,
-        )
-            .animate(onPlay: (c) => c.repeat(reverse: true))
-            .fade(begin: 1, end: 0, duration: 500.ms),
-      ],
+      ),
     );
   }
 }
@@ -628,36 +708,57 @@ class _CustomCursorState extends State<CustomCursor> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Responsive.isWebOrDesktop(context)) return widget.child;
+    if (!Responsive.supportsHover(context)) return widget.child;
 
     return MouseRegion(
-      onHover: (e) => setState(() {
-        _position = e.position;
-        _visible = true;
-      }),
+      hitTestBehavior: HitTestBehavior.translucent,
       onExit: (_) => setState(() => _visible = false),
-      child: Stack(
-        children: [
-          widget.child,
-          if (_visible)
-            Positioned(
-              left: _position.dx - 12,
-              top: _position.dy - 12,
-              child: IgnorePointer(
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.6),
-                      width: 2,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerHover: (event) {
+          setState(() {
+            _position = event.position;
+            _visible = true;
+          });
+        },
+        onPointerMove: (event) {
+          setState(() {
+            _position = event.position;
+            _visible = true;
+          });
+        },
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            widget.child,
+            if (_visible)
+              Positioned(
+                left: _position.dx - 14,
+                top: _position.dy - 14,
+                child: IgnorePointer(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    curve: Curves.easeOut,
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.75),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

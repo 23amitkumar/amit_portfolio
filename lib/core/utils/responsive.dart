@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
+import 'screen_size.dart' as screen_size;
 
 enum ScreenType { mobile, tablet, desktop }
 
@@ -12,8 +14,26 @@ class Responsive {
 
   static double height(BuildContext context) => MediaQuery.sizeOf(context).height;
 
+  /// Layout width adjusted for mobile browsers that request the desktop site.
+  ///
+  /// In that mode the layout viewport can be ~980px while the physical screen
+  /// is still ~390px, which makes grids and cards render too small.
+  static double effectiveWidth(BuildContext context) {
+    final layoutWidth = width(context);
+    if (!kIsWeb) return layoutWidth;
+
+    final deviceWidth = screen_size.deviceScreenWidth;
+    if (deviceWidth <= 0) return layoutWidth;
+
+    if (deviceWidth < AppConstants.tabletBreakpoint && layoutWidth > deviceWidth) {
+      return deviceWidth;
+    }
+
+    return layoutWidth;
+  }
+
   static ScreenType screenType(BuildContext context) {
-    final w = width(context);
+    final w = effectiveWidth(context);
     if (w < AppConstants.mobileBreakpoint) return ScreenType.mobile;
     if (w < AppConstants.tabletBreakpoint) return ScreenType.tablet;
     return ScreenType.desktop;
@@ -29,8 +49,13 @@ class Responsive {
       screenType(context) == ScreenType.desktop;
 
   static bool isWebOrDesktop(BuildContext context) {
-    final w = width(context);
-    return w >= AppConstants.tabletBreakpoint;
+    return effectiveWidth(context) >= AppConstants.tabletBreakpoint;
+  }
+
+  /// True when mouse hover effects should be enabled.
+  static bool supportsHover(BuildContext context) {
+    if (kIsWeb) return !isMobile(context);
+    return isDesktop(context);
   }
 
   static T value<T>({
@@ -62,7 +87,7 @@ class Responsive {
       );
 
   static double contentWidth(BuildContext context) {
-    final w = width(context);
+    final w = effectiveWidth(context);
     return w > AppConstants.maxContentWidth ? AppConstants.maxContentWidth : w;
   }
 }

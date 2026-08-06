@@ -1,12 +1,16 @@
+import 'dart:math' show pi;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../theme/app_colors.dart';
 import '../utils/extensions.dart';
 import '../utils/responsive.dart';
+import '../../features/shell/controllers/shell_controller.dart';
 import 'premium_widgets.dart';
 
 /// Consistent page wrapper with scroll tracking and max width.
-class PageScaffold extends StatelessWidget {
+class PageScaffold extends StatefulWidget {
   const PageScaffold({
     super.key,
     required this.child,
@@ -21,43 +25,70 @@ class PageScaffold extends StatelessWidget {
   final bool showBackground;
 
   @override
-  Widget build(BuildContext context) {
-    final controller = scrollController ?? ScrollController();
+  State<PageScaffold> createState() => _PageScaffoldState();
+}
 
-    if (onScroll != null) {
-      controller.addListener(() {
-        if (!controller.hasClients) return;
-        final max = controller.position.maxScrollExtent;
-        final progress = max > 0 ? controller.offset / max : 0.0;
-        onScroll!(progress);
-      });
+class _PageScaffoldState extends State<PageScaffold> {
+  late final ScrollController _controller;
+  ShellController? _shell;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.scrollController ?? ScrollController();
+    if (widget.onScroll != null) {
+      _shell = Get.find<ShellController>();
+      _shell!.registerScrollController(_controller);
+      _controller.addListener(_handleScroll);
     }
+  }
 
+  @override
+  void dispose() {
+    if (widget.onScroll != null) {
+      _controller.removeListener(_handleScroll);
+      _shell?.unregisterScrollController(_controller);
+    }
+    if (widget.scrollController == null) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    if (!_controller.hasClients || widget.onScroll == null) return;
+    final max = _controller.position.maxScrollExtent;
+    final progress = max > 0 ? _controller.offset / max : 0.0;
+    widget.onScroll!(progress);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final content = Material(
       color: Colors.transparent,
       child: SingleChildScrollView(
-        controller: controller,
+        controller: _controller,
         physics: const BouncingScrollPhysics(),
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: Responsive.contentWidth(context)),
             child: Padding(
               padding: Responsive.pagePadding(context),
-              child: child,
+              child: widget.child,
             ),
           ),
         ),
       ),
     );
 
-    if (!showBackground) return content;
+    if (!widget.showBackground) return content;
 
     return AnimatedBackground(child: content);
   }
 }
 
-/// Profile avatar with gradient ring.
-class ProfileAvatar extends StatelessWidget {
+/// Profile avatar with animated gradient ring.
+class ProfileAvatar extends StatefulWidget {
   const ProfileAvatar({
     super.key,
     this.size = 200,
@@ -68,41 +99,92 @@ class ProfileAvatar extends StatelessWidget {
   final String initials;
 
   @override
+  State<ProfileAvatar> createState() => _ProfileAvatarState();
+}
+
+class _ProfileAvatarState extends State<ProfileAvatar> with SingleTickerProviderStateMixin {
+  late final AnimationController _ringController;
+
+  @override
+  void initState() {
+    super.initState();
+    _ringController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ringController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: AppColors.primaryGradient,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _ringController,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _ringController.value * 2 * pi,
+                child: Container(
+                  width: widget.size,
+                  height: widget.size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SweepGradient(
+                      colors: [
+                        AppColors.primary,
+                        AppColors.secondary,
+                        const Color(0xFF06B6D4),
+                        AppColors.primary,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.35),
+                        blurRadius: 28,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          Container(
+            width: widget.size - 8,
+            height: widget.size - 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: context.isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+            ),
+            child: Center(
+              child: Text(
+                widget.initials,
+                style: TextStyle(
+                  fontSize: widget.size * 0.3,
+                  fontWeight: FontWeight.bold,
+                  foreground: Paint()
+                    ..shader = AppColors.primaryGradient.createShader(
+                      Rect.fromLTWH(0, 0, widget.size, widget.size),
+                    ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(4),
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: context.isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
-        ),
-        child: Center(
-          child: Text(
-            initials,
-            style: TextStyle(
-              fontSize: size * 0.3,
-              fontWeight: FontWeight.bold,
-              foreground: Paint()..shader = AppColors.primaryGradient.createShader(
-                    Rect.fromLTWH(0, 0, size, size),
-                  ),
-            ),
-          ),
-        ),
-      ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 700.ms)
+        .scale(begin: const Offset(0.85, 0.85), end: const Offset(1, 1), duration: 700.ms, curve: Curves.easeOutBack);
   }
 }
 
@@ -124,7 +206,9 @@ class FilterChips extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: items.map((item) {
+        children: items.asMap().entries.map((entry) {
+          final item = entry.value;
+          final chipIndex = entry.key;
           final isSelected = item == selected;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -145,7 +229,10 @@ class FilterChips extends StatelessWidget {
                     ? AppColors.primary
                     : (context.isDarkMode ? AppColors.darkBorder : AppColors.lightBorder),
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(delay: Duration(milliseconds: chipIndex * 60), duration: 350.ms)
+                .slideX(begin: 0.2, end: 0, delay: Duration(milliseconds: chipIndex * 60), duration: 350.ms),
           );
         }).toList(),
       ),
@@ -205,6 +292,8 @@ class _SocialButtonState extends State<SocialButton> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -213,7 +302,10 @@ class _SocialButtonState extends State<SocialButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           transform: Matrix4.diagonal3Values(_hovered ? 1.08 : 1.0, _hovered ? 1.08 : 1.0, 1.0),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 14 : 20,
+            vertical: isMobile ? 12 : 14,
+          ),
           decoration: BoxDecoration(
             color: widget.color.withValues(alpha: _hovered ? 0.15 : 0.08),
             borderRadius: BorderRadius.circular(14),
@@ -223,8 +315,18 @@ class _SocialButtonState extends State<SocialButton> {
             mainAxisSize: MainAxisSize.min,
             children: [
               widget.icon,
-              10.horizontalSpace,
-              Text(widget.label, style: TextStyle(color: widget.color, fontWeight: FontWeight.w600)),
+              SizedBox(width: isMobile ? 8 : 10),
+              Flexible(
+                child: Text(
+                  widget.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: widget.color,
+                    fontWeight: FontWeight.w600,
+                    fontSize: isMobile ? 13 : 14,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

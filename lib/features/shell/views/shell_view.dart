@@ -16,6 +16,7 @@ import '../../home/views/home_view.dart';
 import '../../projects/views/projects_view.dart';
 import '../../services/views/services_view.dart';
 import '../../skills/views/skills_view.dart';
+import '../../testimonials/views/testimonials_view.dart';
 import '../controllers/shell_controller.dart';
 
 /// Main app shell with responsive navigation.
@@ -30,6 +31,8 @@ class ShellView extends GetView<ShellController> {
 
     return CustomCursor(
       child: Scaffold(
+        key: controller.scaffoldKey,
+        drawer: isMobile ? _MobileDrawer(controller: controller) : null,
         body: SafeArea(
           child: Stack(
           children: [
@@ -43,9 +46,22 @@ class ShellView extends GetView<ShellController> {
                       Expanded(
                         child: Obx(
                           () => AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 400),
-                            switchInCurve: Curves.easeIn,
-                            switchOutCurve: Curves.easeOut,
+                            duration: const Duration(milliseconds: 450),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, animation) {
+                              final slide = Tween<Offset>(
+                                begin: const Offset(0, 0.04),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ));
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(position: slide, child: child),
+                              );
+                            },
                             child: _getPage(controller.navItems[controller.currentIndex.value].route),
                           ),
                         ),
@@ -64,10 +80,7 @@ class ShellView extends GetView<ShellController> {
         floatingActionButton: Obx(
           () => BackToTopButton(
             visible: controller.showBackToTop.value,
-            onPressed: () {
-              // Scroll handled per-page via primary scroll controller if needed
-              controller.showBackToTop.value = false;
-            },
+            onPressed: controller.scrollToTop,
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -89,6 +102,8 @@ class ShellView extends GetView<ShellController> {
         return const ProjectsView(key: ValueKey('projects'));
       case AppRoutes.experience:
         return const ExperienceView(key: ValueKey('experience'));
+      case AppRoutes.testimonials:
+        return const TestimonialsView(key: ValueKey('testimonials'));
       case AppRoutes.achievements:
         return const AchievementsView(key: ValueKey('achievements'));
       case AppRoutes.contact:
@@ -125,6 +140,12 @@ class _TopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (isMobile)
+            IconButton(
+              onPressed: () => Get.find<ShellController>().scaffoldKey.currentState?.openDrawer(),
+              icon: const Icon(Icons.menu_rounded),
+              tooltip: 'Menu',
+            ),
           if (isMobile) ...[
             Container(
               width: 36,
@@ -317,22 +338,118 @@ class _BottomNav extends StatelessWidget {
 
   final ShellController controller;
 
+  static const _primaryItems = [0, 1, 4, 8]; // Home, About, Projects, Contact
+
   @override
   Widget build(BuildContext context) {
-    final primaryItems = [0, 1, 4, 8]; // Home, About, Projects, Contact
-
     return Obx(
-      () => NavigationBar(
-        selectedIndex: primaryItems.contains(controller.currentIndex.value)
-            ? primaryItems.indexOf(controller.currentIndex.value)
-            : 0,
-        onDestinationSelected: (i) => controller.navigateTo(primaryItems[i]),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person_rounded), label: 'About'),
-          NavigationDestination(icon: Icon(Icons.folder_outlined), selectedIcon: Icon(Icons.folder_rounded), label: 'Projects'),
-          NavigationDestination(icon: Icon(Icons.mail_outline), selectedIcon: Icon(Icons.mail_rounded), label: 'Contact'),
-        ],
+      () {
+        final current = controller.currentIndex.value;
+        final isPrimary = _primaryItems.contains(current);
+
+        return NavigationBar(
+          selectedIndex: isPrimary ? _primaryItems.indexOf(current) : 4,
+          onDestinationSelected: (i) {
+            if (i == 4) {
+              controller.scaffoldKey.currentState?.openDrawer();
+              return;
+            }
+            controller.navigateTo(_primaryItems[i]);
+          },
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person_rounded), label: 'About'),
+            NavigationDestination(icon: Icon(Icons.folder_outlined), selectedIcon: Icon(Icons.folder_rounded), label: 'Projects'),
+            NavigationDestination(icon: Icon(Icons.mail_outline), selectedIcon: Icon(Icons.mail_rounded), label: 'Contact'),
+            NavigationDestination(icon: Icon(Icons.apps_rounded), selectedIcon: Icon(Icons.apps_rounded), label: 'More'),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MobileDrawer extends StatelessWidget {
+  const _MobileDrawer({required this.controller});
+
+  final ShellController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text('AK', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  12.horizontalSpace,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(AppConstants.developerName, style: context.textTheme.titleMedium),
+                        Text(AppConstants.developerRole, style: context.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: Obx(
+                () {
+                  final currentIndex = controller.currentIndex.value;
+                  return ListView(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    children: List.generate(controller.navItems.length, (index) {
+                      final item = controller.navItems[index];
+                      final isSelected = currentIndex == index;
+                      return StaggerItem(
+                        index: index,
+                        baseDelay: 50,
+                        child: ListTile(
+                          leading: Icon(
+                            item.icon,
+                            color: isSelected ? AppColors.primary : null,
+                            size: 22,
+                          ),
+                          title: Text(
+                            item.label,
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected ? AppColors.primary : null,
+                            ),
+                          ),
+                          selected: isSelected,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          onTap: () {
+                            Navigator.pop(context);
+                            controller.navigateTo(index);
+                          },
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
