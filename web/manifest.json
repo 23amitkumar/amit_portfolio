@@ -1,11 +1,11 @@
 {
-    "name": "amit_porfolio",
-    "short_name": "amit_porfolio",
+    "name": "Amit Kumar Portfolio",
+    "short_name": "Amit Kumar",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Portfolio of Amit Kumar - Senior Flutter & Mobile App Developer.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
