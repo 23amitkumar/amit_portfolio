@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/utils/responsive.dart';
+import '../../../core/widgets/confetti_overlay.dart';
 import '../../../core/widgets/premium_widgets.dart';
 import '../../about/views/about_view.dart';
 import '../../achievements/views/achievements_view.dart';
@@ -173,8 +174,40 @@ class _TopBar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-          ] else
+          ] else ...[
             Text(AppConstants.appName, style: context.textTheme.titleLarge),
+            16.horizontalSpace,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  6.horizontalSpace,
+                  const Text(
+                    'Available for Opportunities',
+                    style: TextStyle(
+                      color: AppColors.success,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const Spacer(),
           Obx(
             () => IconButton(
@@ -192,7 +225,10 @@ class _TopBar extends StatelessWidget {
           GradientButton(
             label: AppStrings.hireMe,
             icon: Icons.rocket_launch_rounded,
-            onPressed: () => Get.find<ShellController>().navigateTo(8),
+            onPressed: () {
+              showConfetti(context);
+              Get.find<ShellController>().navigateTo(8);
+            },
           ),
         ],
       ),

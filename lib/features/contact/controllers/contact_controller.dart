@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/clipboard_helper.dart';
+import '../../../core/widgets/confetti_overlay.dart';
 
 /// Contact form view model controller.
 class ContactController extends GetxController {
@@ -93,6 +94,10 @@ class ContactController extends GetxController {
         subjectController.clear();
         messageController.clear();
         formKey.currentState?.reset();
+
+        if (Get.context != null) {
+          showConfetti(Get.context!);
+        }
 
         Get.snackbar(
           'Message Sent!',
