@@ -14,7 +14,7 @@ class AppConstants {
   static const String whatsapp = '917986112258';
   static const String linkedIn = 'https://linkedin.com/in/amitk23';
   static const String github = 'https://github.com/23amitkumar';
-  static const String resumePath = 'assets/resume/amit_kumar_resume.pdf';
+  static const String resumePath = 'assets/resume/Amit_Kumar_Resume.pdf';
 
   static const double mobileBreakpoint = 600;
   static const double tabletBreakpoint = 1024;
