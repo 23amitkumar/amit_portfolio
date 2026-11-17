@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/models/portfolio_models.dart';
@@ -210,6 +211,8 @@ class _ProjectCardState extends State<_ProjectCard> {
       ],
     );
 
+    final primaryColor = Color(widget.project.gradientColors.first);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -217,10 +220,27 @@ class _ProjectCardState extends State<_ProjectCard> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
         transform: Matrix4.translationValues(0.0, _hovered ? -8.0 : 0.0, 0.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: _hovered
+              ? [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: 0.35),
+                    blurRadius: 28,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
+        ),
         child: GlassCard(
           padding: EdgeInsets.zero,
           hoverEffect: false,
-          child: content,
+          child: InkWell(
+            onTap: () => _showProjectDetails(context, widget.project),
+            borderRadius: BorderRadius.circular(20),
+            child: content,
+          ),
         ),
       ),
     );
@@ -277,35 +297,28 @@ class _ProjectCardState extends State<_ProjectCard> {
             ),
           ],
         ),
-        10.verticalSpace,
+        12.verticalSpace,
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
             if (widget.project.playStoreUrl != null)
-              _LinkButton(
-                icon: Icons.android_rounded,
+              _StoreBadgeButton(
+                icon: FontAwesomeIcons.googlePlay,
                 label: 'Play Store',
+                color: const Color(0xFF00E676),
                 onTap: () => _launch(widget.project.playStoreUrl),
               ),
             if (widget.project.appStoreUrl != null)
-              _LinkButton(
-                icon: Icons.apple_rounded,
+              _StoreBadgeButton(
+                icon: FontAwesomeIcons.apple,
                 label: 'App Store',
+                color: context.isDarkMode ? Colors.white : Colors.black87,
                 onTap: () => _launch(widget.project.appStoreUrl),
               ),
-            if (widget.project.githubUrl != null)
-              _LinkButton(
-                icon: Icons.code_rounded,
-                label: 'GitHub',
-                onTap: () => _launch(widget.project.githubUrl),
-              ),
-            if (widget.project.caseStudyUrl != null)
-              _LinkButton(
-                icon: Icons.article_outlined,
-                label: 'Case Study',
-                onTap: () => _launch(widget.project.caseStudyUrl),
-              ),
+            _DetailsPill(
+              onTap: () => _showProjectDetails(context, widget.project),
+            ),
           ],
         ),
       ],
@@ -313,36 +326,382 @@ class _ProjectCardState extends State<_ProjectCard> {
   }
 }
 
-class _LinkButton extends StatelessWidget {
-  const _LinkButton({
+void _showProjectDetails(BuildContext context, ProjectModel project) {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.75),
+    builder: (context) => _ProjectDetailsDialog(project: project),
+  );
+}
+
+class _ProjectDetailsDialog extends StatelessWidget {
+  const _ProjectDetailsDialog({required this.project});
+
+  final ProjectModel project;
+
+  Future<void> _launchUrlStr(String? url) async {
+    if (url == null) return;
+    final uri = Uri.parse(url.trim());
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(uri);
+      }
+    } catch (_) {
+      try {
+        await launchUrl(uri);
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final gradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: project.gradientColors.map((c) => Color(c)).toList(),
+    );
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 32,
+        vertical: isMobile ? 24 : 40,
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620, maxHeight: 720),
+        child: GlassCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                height: isMobile ? 120 : 150,
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Text(
+                        project.icon,
+                        style: TextStyle(
+                          fontSize: isMobile ? 54 : 64,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: IconButton(
+                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black.withValues(alpha: 0.3),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 12,
+                      left: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          project.category,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(isMobile ? 18 : 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        project.name,
+                        style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      8.verticalSpace,
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, size: 16, color: AppColors.primary),
+                          6.horizontalSpace,
+                          Text(project.duration, style: context.textTheme.labelMedium),
+                          16.horizontalSpace,
+                          Icon(Icons.person_outline, size: 16, color: AppColors.primary),
+                          6.horizontalSpace,
+                          Expanded(
+                            child: Text(
+                              project.role,
+                              style: context.textTheme.labelMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      16.verticalSpace,
+                      Text(
+                        project.description,
+                        style: context.textTheme.bodyMedium?.copyWith(height: 1.5),
+                      ),
+                      20.verticalSpace,
+                      Text(
+                        'Key Features',
+                        style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      12.verticalSpace,
+                      ...project.features.map(
+                        (feat) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(top: 2),
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.check_rounded, size: 13, color: AppColors.success),
+                              ),
+                              10.horizontalSpace,
+                              Expanded(
+                                child: Text(feat, style: context.textTheme.bodyMedium),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      20.verticalSpace,
+                      Text(
+                        'Technologies Used',
+                        style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      12.verticalSpace,
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: project.techStack.map((tech) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                            ),
+                            child: Text(
+                              tech,
+                              style: context.textTheme.labelSmall?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      24.verticalSpace,
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          if (project.playStoreUrl != null)
+                            _LargeStoreButton(
+                              icon: FontAwesomeIcons.googlePlay,
+                              title: 'GET IT ON',
+                              subtitle: 'Google Play',
+                              iconColor: const Color(0xFF00E676),
+                              onTap: () => _launchUrlStr(project.playStoreUrl),
+                            ),
+                          if (project.appStoreUrl != null)
+                            _LargeStoreButton(
+                              icon: FontAwesomeIcons.apple,
+                              title: 'Download on the',
+                              subtitle: 'App Store',
+                              iconColor: context.isDarkMode ? Colors.white : Colors.black87,
+                              onTap: () => _launchUrlStr(project.appStoreUrl),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreBadgeButton extends StatelessWidget {
+  const _StoreBadgeButton({
     required this.icon,
     required this.label,
+    required this.color,
     required this.onTap,
   });
 
-  final IconData icon;
+  final FaIconData icon;
   final String label;
+  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: context.isDarkMode ? AppColors.darkBorder : AppColors.lightBorder,
-          ),
-          borderRadius: BorderRadius.circular(8),
+          color: color.withValues(alpha: 0.08),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14),
+            FaIcon(icon, size: 12, color: color),
+            6.horizontalSpace,
+            Text(
+              label,
+              style: context.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: context.isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailsPill extends StatelessWidget {
+  const _DetailsPill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.info_outline_rounded, size: 13, color: AppColors.primary),
             4.horizontalSpace,
-            Text(label, style: context.textTheme.labelSmall),
+            Text(
+              'Details',
+              style: context.textTheme.labelSmall?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LargeStoreButton extends StatelessWidget {
+  const _LargeStoreButton({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  final FaIconData icon;
+  final String title;
+  final String subtitle;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: context.isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: iconColor.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: iconColor.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FaIcon(icon, size: 24, color: iconColor),
+            12.horizontalSpace,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                    color: context.isDarkMode ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: context.isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

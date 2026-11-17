@@ -2,6 +2,7 @@ import 'dart:math' show pi;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../theme/app_colors.dart';
 import '../utils/extensions.dart';
@@ -122,62 +123,174 @@ class _ProfileAvatarState extends State<ProfileAvatar> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final badgeSize = widget.size * 0.22;
+
     return SizedBox(
-      width: widget.size,
-      height: widget.size,
+      width: widget.size + 30,
+      height: widget.size + 30,
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          AnimatedBuilder(
-            animation: _ringController,
-            builder: (context, child) {
-              return Transform.rotate(
-                angle: _ringController.value * 2 * pi,
-                child: Container(
-                  width: widget.size,
-                  height: widget.size,
+          SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedBuilder(
+                  animation: _ringController,
+                  builder: (context, child) {
+                    return Transform.rotate(
+                      angle: _ringController.value * 2 * pi,
+                      child: Container(
+                        width: widget.size,
+                        height: widget.size,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const SweepGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.secondary,
+                              Color(0xFF06B6D4),
+                              AppColors.primary,
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.35),
+                              blurRadius: 28,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                Container(
+                  width: widget.size - 8,
+                  height: widget.size - 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: SweepGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.secondary,
-                        const Color(0xFF06B6D4),
-                        AppColors.primary,
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.35),
-                        blurRadius: 28,
-                        offset: const Offset(0, 10),
+                    color: context.isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.initials,
+                      style: TextStyle(
+                        fontSize: widget.size * 0.3,
+                        fontWeight: FontWeight.bold,
+                        foreground: Paint()
+                          ..shader = AppColors.primaryGradient.createShader(
+                            Rect.fromLTWH(0, 0, widget.size, widget.size),
+                          ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
-          Container(
-            width: widget.size - 8,
-            height: widget.size - 8,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: context.isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+              ],
             ),
-            child: Center(
-              child: Text(
-                widget.initials,
-                style: TextStyle(
-                  fontSize: widget.size * 0.3,
-                  fontWeight: FontWeight.bold,
-                  foreground: Paint()
-                    ..shader = AppColors.primaryGradient.createShader(
-                      Rect.fromLTWH(0, 0, widget.size, widget.size),
-                    ),
+          ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: Container(
+              width: badgeSize,
+              height: badgeSize,
+              decoration: BoxDecoration(
+                color: context.isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF02569B), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF02569B).withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: FaIcon(
+                  FontAwesomeIcons.flutter,
+                  size: badgeSize * 0.5,
+                  color: const Color(0xFF02569B),
                 ),
               ),
-            ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .moveY(begin: -3, end: 3, duration: 2400.ms, curve: Curves.easeInOut),
+          ),
+          Positioned(
+            bottom: 6,
+            left: 6,
+            child: Container(
+              width: badgeSize,
+              height: badgeSize,
+              decoration: BoxDecoration(
+                color: context.isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFFFA611), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFA611).withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: FaIcon(
+                  FontAwesomeIcons.fire,
+                  size: badgeSize * 0.5,
+                  color: const Color(0xFFFFA611),
+                ),
+              ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .moveY(begin: 3, end: -3, duration: 2800.ms, curve: Curves.easeInOut),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: context.isDarkMode ? const Color(0xFF0F172A) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.primary, width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF22C55E),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  6.horizontalSpace,
+                  const Text(
+                    '4.5+ Yrs',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .moveY(begin: -2, end: 2, duration: 2200.ms, curve: Curves.easeInOut),
           ),
         ],
       ),

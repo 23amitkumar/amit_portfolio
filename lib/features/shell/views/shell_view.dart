@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_strings.dart';
@@ -73,6 +75,11 @@ class ShellView extends GetView<ShellController> {
             ),
             Obx(
               () => ScrollProgressBar(progress: controller.scrollProgress.value),
+            ),
+            Positioned(
+              left: isMobile ? 16 : 24,
+              bottom: isMobile ? 80 : 24,
+              child: const _FloatingWhatsApp(),
             ),
           ],
         )),
@@ -449,6 +456,84 @@ class _MobileDrawer extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FloatingWhatsApp extends StatefulWidget {
+  const _FloatingWhatsApp();
+
+  @override
+  State<_FloatingWhatsApp> createState() => _FloatingWhatsAppState();
+}
+
+class _FloatingWhatsAppState extends State<_FloatingWhatsApp> {
+  bool _hovered = false;
+
+  Future<void> _openWhatsApp() async {
+    final url = Uri.parse('https://wa.me/${AppConstants.whatsapp}?text=Hi%20Amit,%20I%20saw%20your%20portfolio!');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(url);
+      }
+    } catch (_) {
+      try {
+        await launchUrl(url);
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Tooltip(
+        message: 'Chat on WhatsApp',
+        child: InkWell(
+          onTap: _openWhatsApp,
+          borderRadius: BorderRadius.circular(30),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: EdgeInsets.symmetric(
+              horizontal: _hovered && !isMobile ? 16 : 14,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF25D366),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF25D366).withValues(alpha: _hovered ? 0.55 : 0.35),
+                  blurRadius: _hovered ? 20 : 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const FaIcon(FontAwesomeIcons.whatsapp, size: 22, color: Colors.white),
+                if (_hovered && !isMobile) ...[
+                  8.horizontalSpace,
+                  const Text(
+                    'Chat on WhatsApp',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
