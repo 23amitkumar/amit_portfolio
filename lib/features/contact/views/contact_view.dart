@@ -58,52 +58,58 @@ class _ContactForm extends GetView<ContactController> {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      child: Form(
-        key: controller.formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Send a Message', style: context.textTheme.headlineSmall),
-            24.verticalSpace,
-            TextFormField(
-              controller: controller.nameController,
-              validator: controller.validateName,
-              decoration: _inputDecoration(context, 'Your Name', Icons.person_outline_rounded),
-            ),
-            16.verticalSpace,
-            TextFormField(
-              controller: controller.emailController,
-              validator: controller.validateEmail,
-              keyboardType: TextInputType.emailAddress,
-              decoration: _inputDecoration(context, 'Your Email', Icons.email_outlined),
-            ),
-            16.verticalSpace,
-            TextFormField(
-              controller: controller.subjectController,
-              validator: controller.validateSubject,
-              decoration: _inputDecoration(context, 'Subject', Icons.subject_rounded),
-            ),
-            16.verticalSpace,
-            TextFormField(
-              controller: controller.messageController,
-              validator: controller.validateMessage,
-              maxLines: 5,
-              decoration: _inputDecoration(context, 'Your Message', Icons.message_outlined),
-            ),
-            32.verticalSpace,
-            Obx(
-              () => GradientButton(
+      child: Obx(() {
+        if (controller.isSent.value) {
+          return _SuccessCard(onReset: controller.resetForm);
+        }
+
+        return Form(
+          key: controller.formKey,
+          autovalidateMode: controller.autoValidate.value
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Send a Message', style: context.textTheme.headlineSmall),
+              24.verticalSpace,
+              TextFormField(
+                controller: controller.nameController,
+                validator: controller.validateName,
+                decoration: _inputDecoration(context, 'Your Name', Icons.person_outline_rounded),
+              ),
+              16.verticalSpace,
+              TextFormField(
+                controller: controller.emailController,
+                validator: controller.validateEmail,
+                keyboardType: TextInputType.emailAddress,
+                decoration: _inputDecoration(context, 'Your Email', Icons.email_outlined),
+              ),
+              16.verticalSpace,
+              TextFormField(
+                controller: controller.subjectController,
+                validator: controller.validateSubject,
+                decoration: _inputDecoration(context, 'Subject', Icons.subject_rounded),
+              ),
+              16.verticalSpace,
+              TextFormField(
+                controller: controller.messageController,
+                validator: controller.validateMessage,
+                maxLines: 5,
+                decoration: _inputDecoration(context, 'Your Message', Icons.message_outlined),
+              ),
+              32.verticalSpace,
+              GradientButton(
                 label: AppStrings.sendMessage,
                 icon: Icons.send_rounded,
                 isLoading: controller.isSending.value,
                 onPressed: controller.sendMessage,
                 width: double.infinity,
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      }),
     );
   }
 
@@ -128,6 +134,65 @@ class _ContactForm extends GetView<ContactController> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+    );
+  }
+}
+
+class _SuccessCard extends StatelessWidget {
+  const _SuccessCard({required this.onReset});
+
+  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                color: const Color(0xFF22C55E).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF22C55E), width: 2),
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                size: 46,
+                color: Color(0xFF22C55E),
+              ),
+            ),
+            20.verticalSpace,
+            Text(
+              'Message Sent Successfully!',
+              style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            12.verticalSpace,
+            Text(
+              'Thank you for reaching out! I have received your message and will get back to you within 24 hours.',
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            28.verticalSpace,
+            OutlinedButton.icon(
+              onPressed: onReset,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Send Another Message'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                side: const BorderSide(color: AppColors.primary),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

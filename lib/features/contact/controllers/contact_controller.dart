@@ -17,6 +17,7 @@ class ContactController extends GetxController {
 
   final isSending = false.obs;
   final isSent = false.obs;
+  final autoValidate = false.obs;
 
   @override
   void onClose() {
@@ -25,6 +26,16 @@ class ContactController extends GetxController {
     subjectController.dispose();
     messageController.dispose();
     super.onClose();
+  }
+
+  void resetForm() {
+    isSent.value = false;
+    autoValidate.value = false;
+    nameController.clear();
+    emailController.clear();
+    subjectController.clear();
+    messageController.clear();
+    formKey.currentState?.reset();
   }
 
   String? validateName(String? value) {
@@ -51,6 +62,7 @@ class ContactController extends GetxController {
   }
 
   Future<void> sendMessage() async {
+    autoValidate.value = true;
     if (!formKey.currentState!.validate()) return;
 
     isSending.value = true;
@@ -59,6 +71,12 @@ class ContactController extends GetxController {
       final dio = Dio();
       final response = await dio.post(
         'https://formspree.io/f/mrpzglob',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
         data: {
           'name': nameController.text.trim(),
           'email': emailController.text.trim(),
@@ -69,6 +87,13 @@ class ContactController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         isSent.value = true;
+        autoValidate.value = false;
+        nameController.clear();
+        emailController.clear();
+        subjectController.clear();
+        messageController.clear();
+        formKey.currentState?.reset();
+
         Get.snackbar(
           'Message Sent!',
           'Thank you for reaching out. I will get back to you within 24 hours.',
@@ -78,11 +103,6 @@ class ContactController extends GetxController {
           backgroundColor: const Color(0xFF22C55E),
           colorText: Colors.white,
         );
-
-        nameController.clear();
-        emailController.clear();
-        subjectController.clear();
-        messageController.clear();
       } else {
         throw Exception('Failed to send message');
       }
